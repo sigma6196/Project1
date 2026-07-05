@@ -140,19 +140,19 @@
   .ctag { background: var(--surface-2); color: #aab4e8; padding: 2px 9px; border-radius: 99px; font-size: 11px; font-weight: 500; border: 1px solid rgba(170, 180, 232, 0.12); }
   .ctag.more { cursor: pointer; color: var(--text-3); }
   .ctag.more:hover { color: var(--text); }
-  /* SIGMA-PATCH-CLICKABLE-TAGS-V1: clickable card tags */
-  .ctag[data-action="filter-tag"]​NOTION_TWS[ ]NOTION_TWS​
+  /* Clickable card tags */
+  .ctag[data-action="filter-tag"] {
     cursor: pointer;
     transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.12s;
-​NOTION_TWS[  ]NOTION_TWS​
+  }
   .ctag[data-action="filter-tag"]:hover,
-  .ctag[data-action="filter-tag"]:focus-visible​NOTION_TWS[ ]NOTION_TWS​
+  .ctag[data-action="filter-tag"]:focus-visible {
     background: var(--accent-soft);
     color: var(--accent);
     border-color: var(--accent-strong);
     transform: translateY(-1px);
     outline: none;
-​NOTION_TWS[  ]NOTION_TWS​
+  }
 
   .stat-row { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11.5px; color: var(--text-3); padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid var(--border); }
   .stat-row span { display: inline-flex; align-items: center; gap: 4px; }
@@ -544,11 +544,11 @@
         <li>A statement that the information in the notification is accurate, and under penalty of perjury, that the complaining party is authorized to act on behalf of the owner of an exclusive right that is allegedly infringed.</li>
       </ol>
       <p>Please send all DMCA notices to our designated agent at:</p>
-      <p><a href="mailto:niggrniggr619@gmail.com">niggrniggr619@gmail.com</a></p>
+      <p>{% if dmca_email %}<a href="mailto:{{ dmca_email }}">{{ dmca_email }}</a>{% else %}<em>A dedicated contact address is being set up.</em>{% endif %}</p>
     </div>
     <div class="modal-foot">
       <button class="btn" data-close="dmcaModal">Close</button>
-      <a href="mailto:niggrniggr61o@gmail.com?subject=DMCA Takedown Request" class="btn btn-primary">Send DMCA report</a>
+      {% if dmca_email %}<a href="mailto:{{ dmca_email }}?subject=DMCA Takedown Request" class="btn btn-primary">Send DMCA report</a>{% endif %}
     </div>
   </div>
 </div>
@@ -598,6 +598,7 @@ let tagsReady = false;
 
 const FALLBACK_COVER = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22300%22%20height%3D%22360%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23161a23%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-weight%3D%22bold%22%20font-size%3D%2218%22%20fill%3D%22%236d7589%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%3ENo%20Cover%3C%2Ftext%3E%3C%2Fsvg%3E';
 const BLANK_GIF = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+const LEGACY_DATE = '2024-01-01'; // keep in sync with LEGACY_UPLOAD_DATE in gallery_app.py
 
 /* ===================== Helpers ===================== */
 const $ = (id) => document.getElementById(id);
@@ -762,7 +763,7 @@ function cardHTML(novel, index) {
 
   const viewsStr = (novel.views === '-' || !novel.views) ? '&ndash;' : Number(novel.views).toLocaleString();
   const likesStr = (novel.likes === '-' || !novel.likes) ? '&ndash;' : Number(novel.likes).toLocaleString();
-  const dateStr = (novel.upload_date && novel.upload_date !== '1970-01-01 00:00:00') ? novel.upload_date.split(' ')[0] : 'Legacy';
+  const dateStr = (novel.upload_date && novel.upload_date !== LEGACY_DATE) ? novel.upload_date.split(' ')[0] : 'Legacy';
   const authorStr = (novel.author && novel.author !== 'Raw Upload') ? novel.author : 'Unknown';
   const cover = (!novel.cover || novel.cover.includes('placeholder.com') || novel.cover === 'null') ? FALLBACK_COVER : novel.cover;
   const readTarget = novel.id ? novel.id : novel.filename;
@@ -777,7 +778,7 @@ function cardHTML(novel, index) {
   else if (userStatus === 'reading' && userProgress > 0) progressPct = Math.min(100, Math.round((userProgress / totalChaps) * 100));
 
   let isNew = false;
-  if (novel.upload_date && novel.upload_date !== '1970-01-01 00:00:00') {
+  if (novel.upload_date && novel.upload_date !== LEGACY_DATE) {
     isNew = (Date.now() - new Date(novel.upload_date.replace(' ', 'T')).getTime()) / 86400000 <= 3;
   }
 
@@ -1409,44 +1410,6 @@ function init() {
         toast('Address copied to clipboard', 'success');
         const orig = btn.textContent;
         btn.textContent = 'Copied';
-        btn.classList.add('copied');
-        setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1600);
-      } else {
-        toast('Could not copy - please select and copy manually', 'error');
-      }
-    });
-  });
-
-  document.querySelectorAll('[data-close]').forEach((b) => {
-    b.addEventListener('click', () => closeModal(b.dataset.close));
-  });
-  document.querySelectorAll('.modal-overlay').forEach((ov) => {
-    ov.addEventListener('click', (e) => { if (e.target === ov) ov.classList.remove('open'); });
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      document.querySelectorAll('.modal-overlay.open').forEach((m) => m.classList.remove('open'));
-    } else if (e.key === '/' && !/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) {
-      e.preventDefault();
-      $('searchInput').focus();
-    }
-  });
-
-  fetchPageData();
-  loadTags();
-  loadCollections();
-  api('/api/authors')
-    .then((authors) => {
-      $('authorList').innerHTML = authors.map((a) => `<option value="${esc(a)}">`).join('');
-    })
-    .catch(() => { });
-}
-
-init();
-</script>
-</body>
-</html>
-extContent = 'Copied';
         btn.classList.add('copied');
         setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1600);
       } else {
