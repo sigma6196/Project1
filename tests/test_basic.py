@@ -31,6 +31,18 @@ def test_gallery_page_renders_with_detail_modal(admin_client):
     assert "/api/novel/" in body          # detail view wired to the new API
 
 
+def test_auth_pages_render(app):
+    from flask import render_template
+    auth_pages = ("login.html", "register.html", "verify.html",
+                  "forgot_password.html", "reset_password.html")
+    with app.test_request_context("/"):
+        for name in auth_pages:
+            html = render_template(name, error="boom", email="user@test.local")
+            assert html.count("</html>") == 1, name
+            assert "Archive<span>DB</span>" in html, name   # shared brand mark
+            assert "boom" in html, name                     # error box renders
+
+
 def test_reader_template_renders(app):
     from flask import render_template
     with app.test_request_context("/"):

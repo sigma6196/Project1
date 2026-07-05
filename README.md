@@ -85,6 +85,35 @@ FLASK_SECRET_KEY=dev ARCHIVEDB_NO_TELEGRAM=1 COOKIE_SECURE=0 \
 
 The app tolerates missing data files (empty library, console warnings).
 
+## API overview
+
+All endpoints are JSON over the session cookie (login required; `library`-class
+rate limits apply). Telegram links never appear in any response.
+
+| Endpoint | Purpose |
+|---|---|
+| `POST /api/library` | Filtered/sorted/paginated novel list (search, tags AND/OR, audience, status, author, chapters, collection, `random`) |
+| `GET /api/novel/<id>` | Full detail for one novel + the caller's status/progress/collections record |
+| `GET /api/novel/<id>/similar?limit=N` | Tag-based similar novels (`basis`: `tags` / `author` / `popular` fallback) |
+| `GET /api/recommendations?limit=N` | Personalised shelf from the user's status-weighted tag profile |
+| `GET /api/tags`, `GET /api/authors` | Filter vocabularies |
+| `POST /api/user_status`, `POST /api/user_progress` | Reading list status & chapter progress |
+| `POST /api/collections`, `/api/collection_create` / `_rename` / `_delete` / `_assign` | Collections CRUD |
+| `POST /api/edit` | Metadata overrides (admins, or unmatched/custom novels) |
+| `GET /api/read/<id>/chapter/…`, `/asset/…` | Sanitised chapter HTML and its assets |
+| `GET /download/<ref>?type=raw` | EPUB streamed from Telegram (daily quota applies) |
+
+## Tests
+
+```bash
+pip install pytest
+python3 -m pytest tests/ -q
+```
+
+The suite stages `gallery_app.py` and the templates into a temp directory that
+mirrors the server layout (`templates/` subfolder) with fixture data — live
+data paths are never read or written.
+
 ## Security notes
 
 - Secrets are **never** committed. Earlier revisions contained baked-in Telegram
