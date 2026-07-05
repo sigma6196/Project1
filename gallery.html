@@ -299,6 +299,56 @@
   .assign-row:hover { border-color: var(--border-strong); }
   .assign-row input { width: 16px; height: 16px; accent-color: var(--accent); }
   .assign-row .ac-count { margin-left: auto; font-size: 11.5px; color: var(--text-3); }
+
+  /* ============ Novel detail modal ============ */
+  .card { cursor: pointer; }
+  #detailModal { z-index: 900; }
+  .modal.detail { max-width: 860px; padding: 0; position: relative; }
+  .detail-close { position: absolute; top: 12px; right: 12px; z-index: 5; width: 34px; height: 34px; border: 1px solid var(--border-strong); border-radius: 50%; background: rgba(13, 16, 22, 0.72); backdrop-filter: blur(6px); color: var(--text-2); font-size: 19px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
+  .detail-close:hover { color: var(--text); border-color: var(--text-3); }
+  .detail-hero { position: relative; display: flex; gap: 20px; align-items: flex-end; padding: 28px 26px 20px; border-bottom: 1px solid var(--border); overflow: hidden; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+  .detail-hero > * { position: relative; z-index: 1; }
+  .detail-hero .detail-backdrop { position: absolute; inset: -48px; z-index: 0; background-size: cover; background-position: center 25%; filter: blur(36px) saturate(1.2) brightness(0.55); opacity: 0.55; }
+  .detail-hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(17, 20, 27, 0.15), var(--surface) 97%); }
+  .detail-cover { width: 170px; aspect-ratio: 5 / 6; object-fit: cover; border-radius: 10px; border: 1px solid var(--border-strong); box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5); background: var(--surface-2); flex-shrink: 0; display: block; }
+  .detail-head { min-width: 0; padding-bottom: 2px; }
+  .detail-title { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.25; }
+  .detail-title-kr { margin: 5px 0 0; font-size: 13px; color: var(--text-2); }
+  .detail-byline { margin: 8px 0 0; font-size: 13px; color: var(--text-2); }
+  .detail-badges { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+  .detail-badges .badge { position: static; }
+  .detail-badges .badge-19 { display: inline-flex; }
+  .detail-body { padding: 20px 26px 26px; }
+  .detail-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .detail-actions .btn-block { flex: 1 1 170px; }
+  .detail-note { color: var(--text-3); font-size: 13px; margin: 0; }
+  .detail-controls { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .detail-status.want_to_read { color: var(--blue); border-color: var(--blue); }
+  .detail-status.reading { color: var(--amber); border-color: var(--amber); }
+  .detail-status.finished { color: var(--green); border-color: var(--green); }
+  .detail-stats { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--text-3); margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+  .detail-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .detail-syn { font-size: 13.5px; color: var(--text-2); line-height: 1.7; max-height: 250px; overflow-y: auto; padding-right: 8px; }
+  .sim-sect { border-top: 1px solid var(--border); margin-top: 20px; padding-top: 16px; }
+  .sim-head { margin: 0 0 12px; font-size: 11px; font-weight: 700; letter-spacing: 0.7px; text-transform: uppercase; color: var(--text-3); }
+  .sim-rail { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x proximity; }
+  .sim-card { flex: 0 0 118px; padding: 6px; border: 1px solid transparent; border-radius: 10px; cursor: pointer; scroll-snap-align: start; transition: background 0.15s, border-color 0.15s; }
+  .sim-card:hover, .sim-card:focus-visible { background: var(--surface-2); border-color: var(--border); outline: none; }
+  .sim-card img { width: 100%; aspect-ratio: 5 / 6; object-fit: cover; border-radius: 7px; background: var(--surface-2); display: block; }
+  .sim-title { margin-top: 7px; font-size: 11.5px; font-weight: 600; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .sim-sub { margin-top: 2px; font-size: 10.5px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .detail-state { padding: 70px 24px; text-align: center; color: var(--text-2); }
+  .detail-state h3 { color: var(--text); margin: 0 0 6px; }
+  .detail-state p { margin: 0 0 18px; font-size: 13px; color: var(--text-3); }
+  @media (max-width: 640px) {
+    #detailModal { padding: 0; }
+    .modal.detail { max-width: none; height: 100%; max-height: none; border-radius: 0; border: none; }
+    .detail-hero { border-radius: 0; padding: 20px 16px 16px; gap: 14px; }
+    .detail-cover { width: 112px; }
+    .detail-title { font-size: 19px; }
+    .detail-body { padding: 16px 16px 28px; }
+    .detail-syn { max-height: none; overflow: visible; }
+  }
 </style>
 </head>
 <body>
@@ -431,6 +481,13 @@
   <div class="grid" id="novelGrid"></div>
   <nav class="pagination" id="paginationControls" aria-label="Pagination"></nav>
 </main>
+
+<div class="modal-overlay" id="detailModal">
+  <div class="modal detail" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+    <button class="detail-close" id="detailCloseBtn" aria-label="Close details">&times;</button>
+    <div id="detailContent"></div>
+  </div>
+</div>
 
 <div class="modal-overlay" id="collectionsModal">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="collectionsTitle">
@@ -1061,6 +1118,11 @@ function syncCardCollections(key) {
     const cspan = btn.querySelector('.collect-count');
     if (cspan) cspan.textContent = count ? count : '';
   });
+  const dbtn = document.querySelector(`#detailContent button[data-action="collections"][data-key="${CSS.escape(key)}"]`);
+  if (dbtn) {
+    const count = ((globalUserData[key] || {}).collections || []).length;
+    dbtn.textContent = `📁 Collections${count ? ` (${count})` : ''}`;
+  }
 }
 
 /* ===================== Active filter chips ===================== */
@@ -1203,12 +1265,176 @@ function toggleCovers() {
   });
 }
 
+/* ===================== Novel detail view ===================== */
+let detailNovel = null;
+let detailToken = 0;
+
+const SIM_HEADINGS = { tags: 'Similar novels', author: 'More by this author', popular: 'Popular in the library' };
+
+function novelHash(key) { return '#novel=' + encodeURIComponent(key); }
+
+function clearDetailHash() {
+  if (/^#novel=/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
+}
+
+function closeDetail() {
+  detailToken++;
+  $('detailModal').classList.remove('open');
+  clearDetailHash();
+}
+
+function requestNovelDetail(key) {
+  if (location.hash === novelHash(key)) openNovelDetail(key);
+  else location.hash = novelHash(key); // hashchange handler opens the modal
+}
+
+function detailSkeleton() {
+  return `<div class="detail-hero"><div class="sk detail-cover" style="border:none;"></div>
+    <div class="detail-head" style="flex:1;">
+      <div class="sk sk-line" style="margin:0;width:60%;height:20px;"></div>
+      <div class="sk sk-line" style="margin:12px 0 0;width:35%;"></div>
+      <div class="sk sk-line" style="margin:12px 0 0;width:45%;"></div>
+    </div></div>
+    <div class="detail-body">
+      <div class="sk sk-line" style="margin:0;"></div>
+      <div class="sk sk-line" style="margin:10px 0 0;"></div>
+      <div class="sk sk-line" style="margin:10px 0 0;width:70%;"></div>
+    </div>`;
+}
+
+async function openNovelDetail(key) {
+  const token = ++detailToken;
+  openModal('detailModal');
+  $('detailContent').innerHTML = detailSkeleton();
+  try {
+    const [detail, similar] = await Promise.all([
+      api(`/api/novel/${encodeURIComponent(key)}`),
+      api(`/api/novel/${encodeURIComponent(key)}/similar?limit=12`).catch(() => null),
+    ]);
+    if (token !== detailToken) return;
+    detailNovel = detail.novel;
+    globalUserData[key] = Object.assign({}, globalUserData[key], detail.user_record || {});
+    $('detailContent').innerHTML = detailHTML(detail.novel, similar);
+    $('detailContent').querySelectorAll('img').forEach((img) => {
+      img.addEventListener('error', () => { if (img.src !== FALLBACK_COVER) img.src = FALLBACK_COVER; }, { once: true });
+    });
+    $('detailModal').querySelector('.modal').scrollTop = 0;
+  } catch (err) {
+    if (token !== detailToken) return;
+    $('detailContent').innerHTML = `
+      <div class="detail-state">
+        <h3>Couldn't load this novel</h3>
+        <p>${esc(err.message)}</p>
+        <button class="btn btn-primary" data-action="detail-retry" data-key="${esc(key)}">Try again</button>
+      </div>`;
+  }
+}
+
+function detailHTML(novel, similar) {
+  const key = novelKey(novel);
+  const user = globalUserData[key] || {};
+  const status = user.status || 'none';
+  const progress = user.progress || 0;
+  const collCount = (user.collections || []).length;
+  const cover = (!novel.cover || novel.cover.includes('placeholder.com') || novel.cover === 'null') ? FALLBACK_COVER : novel.cover;
+  const authorStr = (novel.author && novel.author !== 'Raw Upload') ? novel.author : 'Unknown';
+  const viewsStr = (novel.views === '-' || !novel.views) ? '&ndash;' : Number(novel.views).toLocaleString();
+  const likesStr = (novel.likes === '-' || !novel.likes) ? '&ndash;' : Number(novel.likes).toLocaleString();
+  const dateStr = (novel.upload_date && novel.upload_date !== LEGACY_DATE) ? novel.upload_date.split(' ')[0] : 'Legacy';
+  const ref = encodeURIComponent(key);
+  const canEdit = (!novel.has_meta || novel.is_custom);
+  const readLabel = (status === 'reading' && progress > 0) ? `&#9654; Continue &middot; ch. ${progress + 1}` : '&#128214; Read online';
+  const readClass = (status === 'reading' && progress > 0) ? 'btn-block btn-read continue' : 'btn-block btn-read';
+
+  let badges = '';
+  if (novel.age === 19) badges += '<span class="badge badge-19">19</span>';
+  if (novel.complete === 1) badges += '<span class="badge complete">Complete</span>';
+
+  let actions = '';
+  if (novel.has_local_read) actions += `<a href="/read/${ref}" target="_blank" rel="noopener" class="${readClass}">${readLabel}</a>`;
+  if (novel.has_download) actions += `<a href="/download/${ref}" class="btn-block btn-dl" data-action="download">⬇️ Download EPUB</a>`;
+  if (novel.has_raw) actions += `<a href="/download/${ref}?type=raw" class="btn-block btn-sub" data-action="download">Download raw</a>`;
+
+  const tags = (novel.tags || []).filter((t) => t !== 'Unmatched');
+  const tagsHtml = tags.map((t) => `<span class="ctag" data-action="filter-tag" data-tag="${esc(t)}" role="button" tabindex="0" title="Filter by ${esc(t)}">${esc(t)}</span>`).join('');
+  const synopsis = esc(novel.synopsis || '').replace(/\n/g, '<br>');
+
+  let simHtml = '';
+  if (similar && similar.novels && similar.novels.length) {
+    simHtml = `<div class="sim-sect"><h3 class="sim-head">${SIM_HEADINGS[similar.basis] || 'You might also like'}</h3><div class="sim-rail">`
+      + similar.novels.map((n) => {
+        const k = novelKey(n);
+        const c = (!n.cover || n.cover.includes('placeholder.com') || n.cover === 'null') ? FALLBACK_COVER : n.cover;
+        const a = (n.author && n.author !== 'Raw Upload') ? n.author : 'Unknown';
+        return `<div class="sim-card" data-action="open-novel" data-key="${esc(k)}" role="button" tabindex="0">
+            <img src="${esc(c)}" loading="lazy" alt="">
+            <div class="sim-title">${esc(n.title_en)}</div>
+            <div class="sim-sub">${esc(a)}</div>
+          </div>`;
+      }).join('') + '</div></div>';
+  }
+
+  return `
+  <div class="detail-hero">
+    <div class="detail-backdrop" style="background-image:url('${esc(cover)}');"></div>
+    <img class="detail-cover" src="${esc(cover)}" alt="">
+    <div class="detail-head">
+      <h2 class="detail-title" id="detailTitle">${esc(novel.title_en)}</h2>
+      ${novel.title_kr ? `<p class="detail-title-kr">${esc(novel.title_kr)}</p>` : ''}
+      <p class="detail-byline">by <b>${esc(authorStr)}</b></p>
+      ${badges ? `<div class="detail-badges">${badges}</div>` : ''}
+    </div>
+  </div>
+  <div class="detail-body">
+    <div class="detail-actions">${actions || '<p class="detail-note">No reading or download options are available for this novel yet.</p>'}</div>
+    <div class="detail-controls">
+      <select class="select detail-status ${esc(status)}" data-action="detail-status" data-key="${esc(key)}" aria-label="Reading status">
+        <option value="none" ${status === 'none' ? 'selected' : ''}>Not in my list</option>
+        <option value="want_to_read" ${status === 'want_to_read' ? 'selected' : ''}>Want to read</option>
+        <option value="reading" ${status === 'reading' ? 'selected' : ''}>Reading</option>
+        <option value="finished" ${status === 'finished' ? 'selected' : ''}>Finished</option>
+      </select>
+      <button class="btn" data-action="collections" data-key="${esc(key)}">📁 Collections${collCount ? ` (${collCount})` : ''}</button>
+      ${canEdit ? `<button class="btn" data-action="edit" data-key="${esc(key)}">Edit metadata</button>` : ''}
+    </div>
+    <div class="detail-stats">
+      <span title="Metadata ID">&#128278; ${esc(novel.id || 'N/A')}</span>
+      <span title="Views">&#128065;&#65039; ${viewsStr}</span>
+      <span title="Likes">&#10084;&#65039; ${likesStr}</span>
+      <span title="Chapters">&#128196; ${esc(novel.chapters)} ch.</span>
+      <span title="Translated on">&#128197; ${esc(dateStr)}</span>
+    </div>
+    ${tagsHtml ? `<div class="detail-tags">${tagsHtml}</div>` : ''}
+    <div class="detail-syn">${synopsis || '<i style="color:var(--text-3)">No synopsis available.</i>'}</div>
+    ${simHtml}
+  </div>`;
+}
+
+function syncGridStatus(key, status) {
+  const sel = document.querySelector(`#novelGrid select[data-action="status"][data-key="${CSS.escape(key)}"]`);
+  if (sel) { sel.value = status; sel.className = `status-select ${status}`; }
+}
+
+async function updateDetailStatus(key, status, sel) {
+  try {
+    const data = await api('/api/user_status', { id: String(key), status });
+    globalUserData = data.user_data;
+    sel.className = `select detail-status ${status}`;
+    toast(status === 'none' ? 'Removed from your list' : 'Status updated', 'success');
+    syncGridStatus(key, status);
+    if (state.readingStatus !== 'all') resetAndFetch();
+  } catch (err) {
+    toast(`Could not update status: ${err.message}`, 'error');
+  }
+}
+
 /* ===================== Modals ===================== */
 function openModal(id) { $(id).classList.add('open'); }
 function closeModal(id) { $(id).classList.remove('open'); }
 
 function openEditModal(key) {
-  const novel = rawNovelsData.find((n) => novelKey(n) === key);
+  const novel = rawNovelsData.find((n) => novelKey(n) === key)
+    || (detailNovel && novelKey(detailNovel) === key ? detailNovel : null);
   if (!novel) return;
   $('editFilename').value = novel.filename;
   $('editTitleEn').value = novel.title_en || '';
@@ -1350,7 +1576,12 @@ function init() {
   });
   $('novelGrid').addEventListener('click', (e) => {
     const actionEl = e.target.closest('[data-action]');
-    if (!actionEl) return;
+    if (!actionEl) {
+      if (e.target.closest('a, button, select, input, textarea')) return;
+      const card = e.target.closest('.card');
+      if (card && card.dataset.key) requestNovelDetail(card.dataset.key);
+      return;
+    }
     const action = actionEl.dataset.action;
     if (action === 'edit') { openEditModal(actionEl.dataset.key); }
     else if (action === 'download') { markDownloading(actionEl); }
@@ -1427,10 +1658,50 @@ function init() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       document.querySelectorAll('.modal-overlay.open').forEach((m) => m.classList.remove('open'));
+      clearDetailHash();
     } else if (e.key === '/' && !/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) {
       e.preventDefault();
       $('searchInput').focus();
     }
+  });
+
+  $('detailCloseBtn').addEventListener('click', closeDetail);
+  $('detailModal').addEventListener('change', (e) => {
+    const sel = e.target.closest('select[data-action="detail-status"]');
+    if (sel) updateDetailStatus(sel.dataset.key, sel.value, sel);
+  });
+  $('detailModal').addEventListener('click', (e) => {
+    if (e.target === $('detailModal')) { closeDetail(); return; }
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    const act = el.dataset.action;
+    if (act === 'open-novel') { requestNovelDetail(el.dataset.key); }
+    else if (act === 'detail-retry') { openNovelDetail(el.dataset.key); }
+    else if (act === 'download') { markDownloading(el); }
+    else if (act === 'edit') { openEditModal(el.dataset.key); }
+    else if (act === 'collections') { openAssignModal(el.dataset.key); }
+    else if (act === 'filter-tag') {
+      const tag = el.dataset.tag;
+      if (tag && !state.includes.has(tag)) {
+        state.includes.add(tag);
+        state.excludes.delete(tag);
+        syncTagCloud();
+        resetAndFetch();
+        toast(`Filtered by tag: ${tag}`, 'success');
+      }
+      closeDetail();
+    }
+  });
+  $('detailModal').addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-action="open-novel"], [data-action="filter-tag"]')) {
+      e.preventDefault();
+      e.target.click();
+    }
+  });
+  window.addEventListener('hashchange', () => {
+    const m = location.hash.match(/^#novel=(.+)$/);
+    if (m) openNovelDetail(decodeURIComponent(m[1]));
+    else { detailToken++; $('detailModal').classList.remove('open'); }
   });
 
   fetchPageData();
@@ -1441,6 +1712,9 @@ function init() {
       $('authorList').innerHTML = authors.map((a) => `<option value="${esc(a)}">`).join('');
     })
     .catch(() => { });
+
+  const deepLink = location.hash.match(/^#novel=(.+)$/);
+  if (deepLink) openNovelDetail(decodeURIComponent(deepLink[1]));
 }
 
 init();

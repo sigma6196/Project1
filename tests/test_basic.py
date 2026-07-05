@@ -22,6 +22,15 @@ def test_api_requires_auth(anon_client):
     assert anon_client.get("/api/novel/1/similar").status_code == 401
 
 
+def test_gallery_page_renders_with_detail_modal(admin_client):
+    r = admin_client.get("/")
+    assert r.status_code == 200
+    body = r.data.decode("utf-8")
+    assert body.count("</html>") == 1
+    assert 'id="detailModal"' in body
+    assert "/api/novel/" in body          # detail view wired to the new API
+
+
 def test_library_payload_hides_private_fields(admin_client):
     r = admin_client.post("/api/library", json={"page": 1, "limit": 30})
     data = r.get_json()
