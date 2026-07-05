@@ -93,17 +93,16 @@ if not FLASK_SECRET_KEY:
         "export it before launching. Changing this value logs out all users."
     )
 
-TELEGRAM_API_ID = _env_int("TELEGRAM_API_ID", 32841971)
-TELEGRAM_API_HASH = _env_str("TELEGRAM_API_HASH", "a3fd098c745f5221dcfc05c01b21c22b")
-TELEGRAM_PHONE = _env_str("TELEGRAM_PHONE", "+919416668628")
-
-for _secret_name in ("TELEGRAM_API_ID", "TELEGRAM_API_HASH", "TELEGRAM_PHONE"):
-    if not os.environ.get(_secret_name, "").strip():
-        _warn(
-            f"{_secret_name} is not set - falling back to an INSECURE value "
-            f"baked into the source. Provision {_secret_name} in the "
-            f"environment and remove the fallback."
-        )
+TELEGRAM_API_ID = _env_int("TELEGRAM_API_ID", 0)
+TELEGRAM_API_HASH = _env_str("TELEGRAM_API_HASH")
+TELEGRAM_PHONE = _env_str("TELEGRAM_PHONE")
+TELEGRAM_CONFIGURED = bool(TELEGRAM_API_ID and TELEGRAM_API_HASH and TELEGRAM_PHONE)
+if not TELEGRAM_CONFIGURED:
+    _warn(
+        "TELEGRAM_API_ID / TELEGRAM_API_HASH / TELEGRAM_PHONE are not all set - "
+        "the Telegram client will not start and downloads stay disabled until "
+        "all three are exported in the environment."
+    )
 
 # --- Email (SMTP) for verification codes ------------------------------------
 SMTP_HOST = _env_str("SMTP_HOST", "smtp.gmail.com")
@@ -113,11 +112,14 @@ SMTP_PASS = _env_str("SMTP_PASS")              # Gmail App Password (NOT account
 if not (SMTP_USER and SMTP_PASS):
     _warn("SMTP_USER/SMTP_PASS not set - verification codes will only print to the console.")
 
-# ---- PROXY CONFIG (MTProto, outside India). Flip USE_PROXY on/off. ----
-USE_PROXY      = False   # True = route Telegram through proxy; False = direct
-MTPROXY_SERVER = "1.vak1l.ir"
-MTPROXY_PORT   = 22
-MTPROXY_SECRET = "dd79e7010200010007f0030386e24c3add"
+# ---- PROXY CONFIG (MTProto). Set USE_PROXY=1 plus MTPROXY_* in the env. ----
+USE_PROXY = _env_str("USE_PROXY", "0") == "1"
+MTPROXY_SERVER = _env_str("MTPROXY_SERVER")
+MTPROXY_PORT = _env_int("MTPROXY_PORT", 443)
+MTPROXY_SECRET = _env_str("MTPROXY_SECRET")
+if USE_PROXY and not (MTPROXY_SERVER and MTPROXY_SECRET):
+    _warn("USE_PROXY=1 but MTPROXY_SERVER/MTPROXY_SECRET are missing - connecting directly.")
+    USE_PROXY = False
 
 # --- Paths -------------------------------------------------------------------
 SESSION_PATH = _env_str("SESSION_PATH", os.path.join(_BASE_DIR, "sigma_reverse_session"))
@@ -142,9 +144,14 @@ USERS_PATH = _env_str("USERS_PATH", os.path.join(META_DIR, "users.json"))
 # --- Access & limits ---------------------------------------------------------
 ADMIN_EMAILS = [
     e.strip().lower()
-    for e in _env_str("ADMIN_EMAILS", "chiragkaushik312@gmail.com,Maxza2089z@gmail.com").split(",")
+    for e in _env_str("ADMIN_EMAILS", "").split(",")
     if e.strip()
 ]
+if not ADMIN_EMAILS:
+    _warn("ADMIN_EMAILS is not set - no account has admin access until it is exported.")
+
+# Public contact shown in the DMCA modal; hidden there when unset.
+DMCA_EMAIL = _env_str("DMCA_EMAIL")
 DAILY_DOWNLOAD_LIMIT = _env_int("DAILY_DOWNLOAD_LIMIT", 10)
 SESSION_LIFETIME_DAYS = _env_int("SESSION_LIFETIME_DAYS", 30)
 
@@ -211,6 +218,13 @@ logging.getLogger("werkzeug").setLevel(logging.ERROR)
 app.jinja_env.undefined = ChainableUndefined
 app.secret_key = FLASK_SECRET_KEY
 app.permanent_session_lifetime = timedelta(days=SESSION_LIFETIME_DAYS)
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    # The public site is HTTPS via Cloudflare Tunnel; set COOKIE_SECURE=0 only
+    # for plain-HTTP local testing (login cookies are dropped otherwise).
+    SESSION_COOKIE_SECURE=_env_str("COOKIE_SECURE", "1") == "1",
+)
 
 for _message in _STARTUP_WARNINGS:
     print(f"[CONFIG WARNING] {_message}")
@@ -329,6 +343,30 @@ def log_request(response):
 
     return response
 
+# 'unsafe-inline' is required: all page CSS/JS is inline in the templates.
+# img-src stays open because covers and notice images are hotlinked from
+# arbitrary external hosts.
+_CSP = (
+    "default-src 'self'; "
+    "script-src 'self' 'unsafe-inline'; "
+    "style-src 'self' 'unsafe-inline'; "
+    "img-src * data: blob:; "
+    "font-src 'self' data:; "
+    "connect-src 'self'; "
+    "object-src 'none'; "
+    "frame-ancestors 'none'; "
+    "base-uri 'self'; "
+    "form-action 'self'"
+)
+
+@app.after_request
+def set_security_headers(response):
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("Content-Security-Policy", _CSP)
+    return response
+
 # ====================================================================
 # 3. TEXT UTILITIES
 # ====================================================================
@@ -389,7 +427,9 @@ def get_pure_english(text):
     return "".join(_ALNUM_PATTERN.findall(str(text))).lower()
 
 def natural_sort_key(s):
-    return [int(part) if part.isdigit() else part.lower() for part in _NATSORT_SPLIT.split(s)]
+    # Tuple tags keep comparisons type-stable when one name has digits where
+    # another has letters (plain int vs str would raise TypeError).
+    return [(0, int(part)) if part.isdigit() else (1, part.lower()) for part in _NATSORT_SPLIT.split(s)]
 
 def to_int(value, default=0):
     """Best-effort int coercion for request parameters."""
@@ -914,7 +954,7 @@ def log_download_event(user_email, novel, tg_link, want_raw, client_ip, count_to
 # ====================================================================
 def _public_novel(n):
     """Return a copy of a gallery item safe to send to the browser."""
-    safe = {k: v for k, v in n.items() if k not in ("tg_link", "raw_tg_link")}
+    safe = {k: v for k, v in n.items() if k not in ("tg_link", "raw_tg_link", "local_folder")}
     safe["has_download"] = bool(n.get("tg_link"))
     safe["has_raw"] = bool(n.get("raw_tg_link"))
     return safe
@@ -1369,6 +1409,26 @@ def get_novel_images(novel):
 
 _MEDIA_REF_PATTERN = re.compile(r"(src=|href=|url\()(['\"]?)([^'\" \)>]+)\2([\s)>]|$)", re.IGNORECASE)
 
+# Chapters come from third-party EPUBs, so anything executable must be
+# stripped before the reader injects the HTML into its DOM. Formatting
+# markup is left untouched; this is defense-in-depth alongside the CSP.
+_SCRIPT_BLOCK_RE = re.compile(r"<script\b[^>]*>[\s\S]*?</script\s*>", re.IGNORECASE)
+_ORPHAN_SCRIPT_RE = re.compile(r"</?script\b[^>]*>", re.IGNORECASE)
+_FORBIDDEN_TAG_RE = re.compile(
+    r"</?(?:iframe|frame|frameset|object|embed|form|meta|base|applet)\b[^>]*>",
+    re.IGNORECASE,
+)
+_EVENT_ATTR_RE = re.compile(r"\s+on[a-z]+\s*=\s*(?:\"[^\"]*\"|'[^']*'|[^\s>]+)", re.IGNORECASE)
+_JS_URL_RE = re.compile(r"(\b(?:href|src|xlink:href)\s*=\s*[\"']?)\s*javascript:[^\"'\s>]*", re.IGNORECASE)
+
+def sanitize_chapter_html(content):
+    content = _SCRIPT_BLOCK_RE.sub("", content)
+    content = _ORPHAN_SCRIPT_RE.sub("", content)
+    content = _FORBIDDEN_TAG_RE.sub("", content)
+    content = _EVENT_ATTR_RE.sub("", content)
+    content = _JS_URL_RE.sub(r"\1#", content)
+    return content
+
 def rewrite_chapter_assets(content, novel_id, chap_rel_path):
     chap_dir = os.path.dirname(chap_rel_path)
     def replace_media(match):
@@ -1492,10 +1552,13 @@ def run_telethon():
     except Exception as exc:
         print(f"[TELEGRAM] Background loop stopped: {exc}")
 
-if not os.environ.get("ARCHIVEDB_NO_TELEGRAM"):
-    threading.Thread(target=run_telethon, daemon=True).start()
-else:
+if os.environ.get("ARCHIVEDB_NO_TELEGRAM"):
     print("[TELEGRAM] ARCHIVEDB_NO_TELEGRAM set - background client disabled.")
+elif not TELEGRAM_CONFIGURED:
+    print("[TELEGRAM] Credentials not configured - downloads disabled until "
+          "TELEGRAM_API_ID/TELEGRAM_API_HASH/TELEGRAM_PHONE are exported.")
+else:
+    threading.Thread(target=run_telethon, daemon=True).start()
 
 def parse_telegram_link(tg_link):
     try:
@@ -1529,7 +1592,7 @@ def require_json(*required_keys):
 @app.route("/")
 @login_required
 def index():
-    return render_template("gallery.html")
+    return render_template("gallery.html", dmca_email=DMCA_EMAIL)
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -1679,7 +1742,7 @@ def api_collections():
 @login_required
 def api_collection_create():
     email = session["user_email"]
-    data = request.get_json(force=True, silent=True) or {}
+    data = request.get_json(silent=True) or {}
     name = str(data.get("name", "")).strip()[:60]
     if not name:
         return jsonify({"error": "Collection name is required"}), 400
@@ -1697,7 +1760,7 @@ def api_collection_create():
 @login_required
 def api_collection_rename():
     email = session["user_email"]
-    data = request.get_json(force=True, silent=True) or {}
+    data = request.get_json(silent=True) or {}
     cid = str(data.get("id", "")).strip()
     name = str(data.get("name", "")).strip()[:60]
     if not cid or not name:
@@ -1721,7 +1784,7 @@ def api_collection_rename():
 @login_required
 def api_collection_delete():
     email = session["user_email"]
-    data = request.get_json(force=True, silent=True) or {}
+    data = request.get_json(silent=True) or {}
     cid = str(data.get("id", "")).strip()
     if not cid:
         return jsonify({"error": "Collection id is required"}), 400
@@ -1745,7 +1808,7 @@ def api_collection_delete():
 @login_required
 def api_collection_assign():
     email = session["user_email"]
-    data = request.get_json(force=True, silent=True) or {}
+    data = request.get_json(silent=True) or {}
     novel_id = str(data.get("id", "")).strip()
     cid = str(data.get("collection", "")).strip()
     add = bool(data.get("add", True))
@@ -1971,6 +2034,14 @@ def edit_metadata():
     filename = str(data.get("filename", "")).strip()
     if not filename:
         return json_error("'filename' must be a non-empty string.", 400)
+    novel = next((n for n in load_gallery_data() if n.get("filename") == filename), None)
+    if novel is None:
+        return json_error("Unknown novel filename.", 404)
+    # Mirror the frontend rule server-side: automatically matched metadata is
+    # read-only for non-admins; unmatched or already-customised items are open.
+    if (session.get("user_email", "") not in ADMIN_EMAILS
+            and novel.get("has_meta") and not novel.get("is_custom")):
+        return json_error("Only admins can edit automatically matched metadata.", 403)
     cover_url = str(data.get("cover", "")).strip()
     if cover_url and not cover_url.startswith(("http://", "https://")):
         cover_url = ""
@@ -2298,10 +2369,10 @@ def api_read_chapter(novel_id, chap_path):
         return "Chapter file unreadable.", 500
 
     content = rewrite_chapter_assets(content, novel_id, clean_chap_path)
-    body_match = re.search(r"<body*>([\s\S]*?)<\/body>", content, re.IGNORECASE)
+    body_match = re.search(r"<body[^>]*>([\s\S]*?)</body>", content, re.IGNORECASE)
     if body_match:
         content = body_match.group(1)
-    return content
+    return sanitize_chapter_html(content)
 
 @app.route("/api/read/<novel_id>/asset/<path:asset_path>")
 @login_required
