@@ -26,6 +26,7 @@ import hashlib
 import ipaddress
 import json
 import logging
+import math
 import os
 import queue
 import random
@@ -1144,7 +1145,7 @@ def _build_gallery_items():
         print(f"[WARN] Could not read {TRANSLATED_CSV_PATH}: {exc}")
     return items
 
-_gallery_cache = {"items": [], "csv_mtime": 0.0, "custom_mtime": 0.0, "out_mtime": 0.0}
+_gallery_cache = {"items": [], "csv_mtime": 0.0, "custom_mtime": 0.0, "out_mtime": 0.0, "gen": 0}
 _GALLERY_CACHE_LOCK = threading.Lock()
 
 def _mtime(path):
@@ -1165,7 +1166,8 @@ def load_gallery_data():
             return cache["items"]
         items = _build_gallery_items()
         cache.update(items=items, csv_mtime=csv_mtime,
-                     custom_mtime=custom_mtime, out_mtime=out_mtime)
+                     custom_mtime=custom_mtime, out_mtime=out_mtime,
+                     gen=cache["gen"] + 1)
         return items
 
 def find_novel(novel_id):
@@ -1336,6 +1338,161 @@ def _cache_cdn_image(url):
         except OSError:
             pass
         return None, None
+
+# ====================================================================
+# 8c. TAG SIMILARITY & RECOMMENDATIONS
+# ====================================================================
+# IDF-weighted tag overlap: novels sharing rare tags ("Regression") are far
+# more alike than novels sharing ubiquitous ones ("Fantasy"). The inverted
+# index piggybacks on the gallery cache generation so it rebuilds exactly
+# when the gallery does.
+SIMILAR_MAX = 24
+_GENERIC_AUTHORS = ("", "Unknown", "Raw Upload")
+_REC_STATUS_WEIGHTS = {"reading": 1.5, "finished": 1.0, "want_to_read": 0.5}
+
+_SIM_LOCK = threading.Lock()
+_sim_state = {"gen": None, "novel_tags": {}, "tag_novels": {}, "tag_idf": {},
+              "by_key": {}, "topk": {}}
+
+def _novel_is_adult(novel):
+    return to_int(novel.get("age"), 0) == 19
+
+def _similarity_state():
+    items = load_gallery_data()
+    with _GALLERY_CACHE_LOCK:
+        gen = _gallery_cache["gen"]
+    with _SIM_LOCK:
+        if _sim_state["gen"] == gen:
+            return _sim_state
+        tag_novels = defaultdict(set)
+        novel_tags, by_key = {}, {}
+        for n in items:
+            key = novel_key(n)
+            by_key[key] = n
+            tags = {t for t in n.get("tags", []) if t and t != "Unmatched"}
+            novel_tags[key] = tags
+            for t in tags:
+                tag_novels[t].add(key)
+        total = max(1, len(by_key))
+        tag_idf = {t: math.log(total / len(keys)) for t, keys in tag_novels.items()}
+        _sim_state.update(gen=gen, novel_tags=novel_tags, tag_novels=dict(tag_novels),
+                          tag_idf=tag_idf, by_key=by_key, topk={})
+        return _sim_state
+
+def _popularity_bonus(novel):
+    """Small tiebreaker only - must never outrank a rare shared tag."""
+    return 0.05 * math.log10(1 + max(0, to_int(novel.get("likes"), 0)))
+
+def _rank_similar(seed, state):
+    seed_key = novel_key(seed)
+    seed_tags = state["novel_tags"].get(seed_key) or set()
+    seed_author = (seed.get("author") or "").strip()
+    adult_ok = _novel_is_adult(seed)
+
+    overlap = defaultdict(float)
+    for t in seed_tags:
+        idf = state["tag_idf"].get(t, 0.0)
+        for key in state["tag_novels"].get(t, ()):
+            if key != seed_key:
+                overlap[key] += idf
+
+    scored = []
+    for key, shared in overlap.items():
+        cand = state["by_key"][key]
+        if not adult_ok and _novel_is_adult(cand):
+            continue
+        cand_tags = state["novel_tags"].get(key) or set()
+        score = shared / math.sqrt(max(1, len(seed_tags)) * max(1, len(cand_tags)))
+        if seed_author not in _GENERIC_AUTHORS and (cand.get("author") or "").strip() == seed_author:
+            score += 0.3
+        score += _popularity_bonus(cand)
+        scored.append((score, key))
+    scored.sort(key=lambda pair: pair[0], reverse=True)
+    return scored[:SIMILAR_MAX]
+
+def get_similar_novels(seed, limit):
+    """Return (basis, [(score, novel), ...]) for a seed novel.
+
+    basis: "tags" normally, "author" / "popular" when the seed has no
+    usable tag overlap. Adult titles are only suggested for adult seeds.
+    """
+    state = _similarity_state()
+    seed_key = novel_key(seed)
+    with _SIM_LOCK:
+        ranked = state["topk"].get(seed_key)
+    if ranked is None:
+        ranked = _rank_similar(seed, state)
+        with _SIM_LOCK:
+            state["topk"][seed_key] = ranked
+    results = [(score, state["by_key"][key]) for score, key in ranked[:limit]
+               if key in state["by_key"]]
+    if results:
+        return "tags", results
+
+    adult_ok = _novel_is_adult(seed)
+    seed_author = (seed.get("author") or "").strip()
+    if seed_author not in _GENERIC_AUTHORS:
+        same_author = [n for n in state["by_key"].values()
+                       if novel_key(n) != seed_key
+                       and (n.get("author") or "").strip() == seed_author
+                       and (adult_ok or not _novel_is_adult(n))]
+        if same_author:
+            same_author.sort(key=lambda n: to_int(n.get("likes"), 0), reverse=True)
+            return "author", [(0.0, n) for n in same_author[:limit]]
+
+    popular = [n for n in state["by_key"].values()
+               if novel_key(n) != seed_key and (adult_ok or not _novel_is_adult(n))]
+    popular.sort(key=lambda n: to_int(n.get("likes"), 0), reverse=True)
+    return "popular", [(0.0, n) for n in popular[:limit]]
+
+def get_user_recommendations(email, limit):
+    """Personalised shelf: score the library against the user's tag profile.
+
+    Saved novels (any status/progress entry) are never recommended back;
+    adult titles only appear if the user's own list already contains one.
+    """
+    state = _similarity_state()
+    udata = load_user_data().get(email, {})
+    profile = defaultdict(float)
+    saved = set()
+    allow_adult = False
+    for key, record in udata.items():
+        if not isinstance(record, dict):
+            continue
+        saved.add(key)
+        weight = _REC_STATUS_WEIGHTS.get(record.get("status"), 0.0)
+        novel = state["by_key"].get(key)
+        if weight <= 0 or novel is None:
+            continue
+        if _novel_is_adult(novel):
+            allow_adult = True
+        for t in state["novel_tags"].get(key, ()):
+            profile[t] += weight
+
+    if profile:
+        overlap = defaultdict(float)
+        for t, weight in profile.items():
+            idf = state["tag_idf"].get(t, 0.0)
+            for key in state["tag_novels"].get(t, ()):
+                if key not in saved:
+                    overlap[key] += idf * weight
+        scored = []
+        for key, shared in overlap.items():
+            cand = state["by_key"][key]
+            if not allow_adult and _novel_is_adult(cand):
+                continue
+            cand_tags = state["novel_tags"].get(key) or set()
+            scored.append((shared / math.sqrt(max(1, len(cand_tags)))
+                           + _popularity_bonus(cand), key))
+        if scored:
+            scored.sort(key=lambda pair: pair[0], reverse=True)
+            return "tags", [(score, state["by_key"][key]) for score, key in scored[:limit]]
+
+    popular = [n for n in state["by_key"].values()
+               if novel_key(n) not in saved and (allow_adult or not _novel_is_adult(n))]
+    popular.sort(key=lambda n: (to_int(n.get("likes"), 0), str(n.get("upload_date") or "")),
+                 reverse=True)
+    return "popular", [(0.0, n) for n in popular[:limit]]
 
 # ====================================================================
 # 9. READER PIPELINE (TOC, CHAPTERS, ASSETS)
@@ -2023,6 +2180,48 @@ def api_library():
         "totalPages": total_pages,
         "currentPage": page,
         "userData": user_data,
+    })
+
+def _clamped_limit(default=12):
+    return min(SIMILAR_MAX, max(1, to_int(request.args.get("limit"), default)))
+
+@app.route("/api/novel/<path:novel_id>", methods=["GET"])
+@login_required
+def api_novel_detail(novel_id):
+    limited = enforce_rate_limit("library", as_json=True)
+    if limited:
+        return limited
+    novel = find_novel(novel_id)
+    if not novel:
+        return json_error("Novel not found.", 404)
+    record = load_user_data().get(session["user_email"], {}).get(novel_key(novel), {})
+    return jsonify({"novel": _public_novel(novel), "user_record": record})
+
+@app.route("/api/novel/<path:novel_id>/similar", methods=["GET"])
+@login_required
+def api_novel_similar(novel_id):
+    limited = enforce_rate_limit("library", as_json=True)
+    if limited:
+        return limited
+    novel = find_novel(novel_id)
+    if not novel:
+        return json_error("Novel not found.", 404)
+    basis, results = get_similar_novels(novel, _clamped_limit())
+    return jsonify({
+        "basis": basis,
+        "novels": [dict(_public_novel(n), score=round(score, 4)) for score, n in results],
+    })
+
+@app.route("/api/recommendations", methods=["GET"])
+@login_required
+def api_recommendations():
+    limited = enforce_rate_limit("library", as_json=True)
+    if limited:
+        return limited
+    basis, results = get_user_recommendations(session["user_email"], _clamped_limit())
+    return jsonify({
+        "basis": basis,
+        "novels": [dict(_public_novel(n), score=round(score, 4)) for score, n in results],
     })
 
 @app.route("/api/edit", methods=["POST"])
