@@ -31,6 +31,16 @@ def test_gallery_page_renders_with_detail_modal(admin_client):
     assert "/api/novel/" in body          # detail view wired to the new API
 
 
+def test_reader_template_renders(app):
+    from flask import render_template
+    with app.test_request_context("/"):
+        html = render_template("reader.html", novel={"id": "1", "title_en": "T", "filename": "f"},
+                               toc=["c1.html"], images=[], server_progress=0)
+    assert html.count("</html>") == 1
+    assert "endrecs" in html            # end-of-book panel present
+    assert "Synced progress" in html    # cross-device resume offer present
+
+
 def test_library_payload_hides_private_fields(admin_client):
     r = admin_client.post("/api/library", json={"page": 1, "limit": 30})
     data = r.get_json()
