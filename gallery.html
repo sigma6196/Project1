@@ -111,10 +111,10 @@
   .results-meta strong { color: var(--text); font-size: 14px; }
 
   /* ============ Grid & cards ============ */
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 18px; margin-bottom: 36px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; margin-bottom: 36px; }
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; display: flex; flex-direction: column; transition: border-color 0.15s, transform 0.15s; }
   .card:hover { border-color: var(--border-strong); transform: translateY(-2px); }
-  .cover-wrap { position: relative; aspect-ratio: 5 / 6; background: var(--surface-2); border-bottom: 1px solid var(--border); }
+  .cover-wrap { position: relative; aspect-ratio: 2 / 3; background: var(--surface-2); border-bottom: 1px solid var(--border); }
   .cover { width: 100%; height: 100%; object-fit: cover; display: block; }
   body.hide-covers .cover { display: none; }
   body.hide-covers .cover-wrap { aspect-ratio: auto; height: 72px; }
@@ -123,20 +123,17 @@
   .badges-tr { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; z-index: 2; }
   .badge.complete { position: static; background: #059669; }
   .badge.new { position: static; background: #2563eb; }
-  .status-select { position: absolute; bottom: 10px; right: 10px; z-index: 3; background: rgba(13, 16, 22, 0.85); backdrop-filter: blur(6px); color: var(--text-2); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); font-size: 11px; font-weight: 700; padding: 6px 10px; cursor: pointer; outline: none; appearance: none; text-align: center; max-width: 60%; }
-  .status-select:hover { color: var(--text); border-color: var(--text-3); }
-  .status-select.want_to_read { color: var(--blue); border-color: var(--blue); }
-  .status-select.reading { color: var(--amber); border-color: var(--amber); }
-  .status-select.finished { color: var(--green); border-color: var(--green); }
+  .status-pill { position: absolute; bottom: 9px; left: 9px; z-index: 3; font-size: 10px; font-weight: 700; letter-spacing: 0.2px; padding: 3px 9px; border-radius: 99px; background: rgba(13, 16, 22, 0.82); backdrop-filter: blur(6px); border: 1px solid var(--border-strong); color: var(--text-2); pointer-events: none; max-width: calc(100% - 18px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .status-pill.want_to_read { color: var(--blue); border-color: rgba(96, 165, 250, 0.55); }
+  .status-pill.reading { color: var(--amber); border-color: rgba(251, 191, 36, 0.55); }
+  .status-pill.finished { color: var(--green); border-color: rgba(52, 211, 153, 0.55); }
   .progress-rail { position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: rgba(0,0,0,0.55); z-index: 2; }
   .progress-fill { height: 100%; background: var(--accent); transition: width 0.3s; }
 
-  .card-body { padding: 16px; display: flex; flex-direction: column; flex: 1; gap: 0; }
-  .title-en { margin: 0; font-size: 15.5px; font-weight: 700; line-height: 1.35; color: var(--text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .title-kr { margin: 3px 0 0; font-size: 12px; color: var(--text-3); font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .byline { font-size: 12px; color: var(--text-2); margin: 8px 0 10px; }
-  .byline b { font-weight: 600; color: var(--text-2); }
-  .tag-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
+  .card-body { padding: 10px 12px 12px; }
+  .title-en { margin: 0; font-size: 13px; font-weight: 700; line-height: 1.35; color: var(--text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.7em; }
+  .card-author { margin: 4px 0 0; font-size: 11.5px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 2px; }
   .ctag { background: var(--surface-2); color: #aab4e8; padding: 2px 9px; border-radius: 99px; font-size: 11px; font-weight: 500; border: 1px solid rgba(170, 180, 232, 0.12); }
   .ctag.more { cursor: pointer; color: var(--text-3); }
   .ctag.more:hover { color: var(--text); }
@@ -154,15 +151,6 @@
     outline: none;
   }
 
-  .stat-row { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11.5px; color: var(--text-3); padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid var(--border); }
-  .stat-row span { display: inline-flex; align-items: center; gap: 4px; }
-  .synopsis { font-size: 12.5px; color: var(--text-2); line-height: 1.65; max-height: 5.6em; overflow: hidden; position: relative; transition: max-height 0.25s ease; }
-  .synopsis.expanded { max-height: 1000px; overflow-y: auto; }
-  .syn-toggle { background: none; border: none; color: var(--accent); font-size: 12px; font-weight: 600; cursor: pointer; padding: 4px 0 0; text-align: left; }
-  .syn-toggle:hover { text-decoration: underline; }
-  .card-actions { margin-top: auto; padding-top: 14px; display: flex; flex-direction: column; gap: 8px; }
-  .action-row { display: flex; gap: 8px; }
-  .action-row > * { flex: 1; }
   .btn-block { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 12px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; text-decoration: none; cursor: pointer; border: 1px solid transparent; transition: background 0.15s, border-color 0.15s; text-align: center; }
   .btn-read { background: var(--accent-strong); color: #fff; }
   .btn-read:hover { background: var(--accent); }
@@ -178,7 +166,7 @@
   .sk-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
   .sk { background: linear-gradient(100deg, var(--surface-2) 40%, var(--surface-3) 50%, var(--surface-2) 60%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
   @keyframes shimmer { to { background-position: -200% 0; } }
-  .sk-cover { aspect-ratio: 5 / 6; }
+  .sk-cover { aspect-ratio: 2 / 3; }
   body.hide-covers .sk-cover { aspect-ratio: auto; height: 72px; }
   .sk-line { height: 12px; border-radius: 6px; margin: 12px 16px 0; }
   .sk-line.short { width: 50%; }
@@ -252,12 +240,9 @@
     .search-kbd { display: none; }
     .topbar-actions { gap: 6px; }
     .container { padding: 14px 14px 50px; }
-    .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .card-body { padding: 11px; }
-    .title-en { font-size: 13.5px; }
-    .title-kr { font-size: 11px; }
-    .byline, .stat-row { font-size: 10.5px; }
-    .synopsis { font-size: 11.5px; max-height: 4.8em; }
+    .grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+    .card-body { padding: 9px 10px 11px; }
+    .title-en { font-size: 12.5px; }
     .ctag { font-size: 10px; padding: 2px 7px; }
     .btn-block { padding: 8px 6px; font-size: 11.5px; }
     .toolbar-right { margin-left: 0; width: 100%; }
@@ -278,11 +263,6 @@
   }
   
   /* ============ Collections ============ */
-  .collect-btn { position: absolute; bottom: 10px; left: 10px; z-index: 3; background: rgba(13,16,22,.85); backdrop-filter: blur(6px); color: var(--text-2); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); font-size: 13px; padding: 6px 9px; cursor: pointer; line-height: 1; display: inline-flex; align-items: center; gap: 5px; }
-  .collect-btn:hover { color: var(--text); border-color: var(--text-3); }
-  .collect-btn.has { color: var(--accent); border-color: var(--accent-strong); }
-  .collect-count { font-size: 11px; font-weight: 700; }
-
   .coll-create-row { display: flex; gap: 8px; margin-bottom: 16px; }
   .coll-list { display: flex; flex-direction: column; gap: 8px; }
   .coll-item { display: flex; align-items: center; gap: 10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; }
@@ -300,6 +280,14 @@
   .assign-row input { width: 16px; height: 16px; accent-color: var(--accent); }
   .assign-row .ac-count { margin-left: auto; font-size: 11.5px; color: var(--text-3); }
 
+  /* ============ Home shelves ============ */
+  .shelf { margin-bottom: 20px; }
+  .shelf-head { margin: 0 0 10px; font-size: 13.5px; font-weight: 800; letter-spacing: -0.2px; color: var(--text); }
+  .shelf .sim-rail { padding-bottom: 8px; }
+  a.sim-card { display: block; text-decoration: none; color: inherit; }
+  .sim-prog { height: 3px; border-radius: 2px; background: rgba(0, 0, 0, 0.55); margin-top: 6px; overflow: hidden; }
+  .sim-prog i { display: block; height: 100%; background: var(--accent); }
+
   /* ============ Novel detail modal ============ */
   .card { cursor: pointer; }
   #detailModal { z-index: 900; }
@@ -310,7 +298,7 @@
   .detail-hero > * { position: relative; z-index: 1; }
   .detail-hero .detail-backdrop { position: absolute; inset: -48px; z-index: 0; background-size: cover; background-position: center 25%; filter: blur(36px) saturate(1.2) brightness(0.55); opacity: 0.55; }
   .detail-hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(17, 20, 27, 0.15), var(--surface) 97%); }
-  .detail-cover { width: 170px; aspect-ratio: 5 / 6; object-fit: cover; border-radius: 10px; border: 1px solid var(--border-strong); box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5); background: var(--surface-2); flex-shrink: 0; display: block; }
+  .detail-cover { width: 170px; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 10px; border: 1px solid var(--border-strong); box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5); background: var(--surface-2); flex-shrink: 0; display: block; }
   .detail-head { min-width: 0; padding-bottom: 2px; }
   .detail-title { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.25; }
   .detail-title-kr { margin: 5px 0 0; font-size: 13px; color: var(--text-2); }
@@ -334,7 +322,7 @@
   .sim-rail { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x proximity; }
   .sim-card { flex: 0 0 118px; padding: 6px; border: 1px solid transparent; border-radius: 10px; cursor: pointer; scroll-snap-align: start; transition: background 0.15s, border-color 0.15s; }
   .sim-card:hover, .sim-card:focus-visible { background: var(--surface-2); border-color: var(--border); outline: none; }
-  .sim-card img { width: 100%; aspect-ratio: 5 / 6; object-fit: cover; border-radius: 7px; background: var(--surface-2); display: block; }
+  .sim-card img { width: 100%; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 7px; background: var(--surface-2); display: block; }
   .sim-title { margin-top: 7px; font-size: 11.5px; font-weight: 600; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .sim-sub { margin-top: 2px; font-size: 10.5px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .detail-state { padding: 70px 24px; text-align: center; color: var(--text-2); }
@@ -475,6 +463,17 @@
   </section>
 
   <div class="chips" id="activeChips"></div>
+
+  <section id="shelves" style="display:none;" aria-label="Personalised shelves">
+    <div class="shelf" id="shelfContinue" style="display:none;">
+      <h2 class="shelf-head">Continue reading</h2>
+      <div class="sim-rail" id="continueRail"></div>
+    </div>
+    <div class="shelf" id="shelfRecs" style="display:none;">
+      <h2 class="shelf-head" id="recsHead">Recommended for you</h2>
+      <div class="sim-rail" id="recsRail"></div>
+    </div>
+  </section>
 
   <div class="results-meta" id="resultsMeta"><strong>Connecting&hellip;</strong></div>
 
@@ -656,6 +655,7 @@ let tagsReady = false;
 const FALLBACK_COVER = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22300%22%20height%3D%22360%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23161a23%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-family%3D%22sans-serif%22%20font-weight%3D%22bold%22%20font-size%3D%2218%22%20fill%3D%22%236d7589%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%3ENo%20Cover%3C%2Ftext%3E%3C%2Fsvg%3E';
 const BLANK_GIF = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 const LEGACY_DATE = '2024-01-01'; // keep in sync with LEGACY_UPLOAD_DATE in gallery_app.py
+const STATUS_NAMES = { want_to_read: 'Want to read', reading: 'Reading', finished: 'Finished' };
 
 /* ===================== Helpers ===================== */
 const $ = (id) => document.getElementById(id);
@@ -741,7 +741,7 @@ function buildPayload(isRandom = false) {
 /* ===================== Fetch & render ===================== */
 function renderSkeletons() {
   let html = '';
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 12; i++) {
     html += `<div class="sk-card" aria-hidden="true"><div class="sk sk-cover"></div><div class="sk sk-line"></div><div class="sk sk-line short"></div><div class="sk sk-line"></div></div>`;
   }
   $('novelGrid').innerHTML = html;
@@ -776,6 +776,10 @@ const delayFetch = () => { clearTimeout(searchTimeout); searchTimeout = setTimeo
 function novelKey(novel) { return novel.id ? String(novel.id) : novel.filename; }
 
 function renderApp(novels, totalItems, totalPages) {
+  const showShelves = isDefaultView();
+  $('shelves').style.display = showShelves ? '' : 'none';
+  if (showShelves && (!shelvesLoaded || shelvesStale)) loadShelves();
+
   if (!tagsReady && novels && novels.length) {
     const derived = deriveTagCounts(novels);
     if (Object.keys(derived).length) { setupTags(derived); tagsReady = true; }
@@ -802,7 +806,7 @@ function renderApp(novels, totalItems, totalPages) {
   }
 
   let html = '';
-  novels.forEach((novel, i) => { html += cardHTML(novel, i); });
+  novels.forEach((novel) => { html += cardHTML(novel); });
   $('novelGrid').innerHTML = html;
 
   document.querySelectorAll('#novelGrid img.cover').forEach((img) => {
@@ -811,23 +815,13 @@ function renderApp(novels, totalItems, totalPages) {
   renderPagination(totalPages);
 }
 
-function cardHTML(novel, index) {
+function cardHTML(novel) {
   const key = novelKey(novel);
   const user = globalUserData[key] || {};
   const userStatus = user.status || 'none';
   const userProgress = user.progress || 0;
-  const collCount = (user.collections || []).length;
-
-  const viewsStr = (novel.views === '-' || !novel.views) ? '&ndash;' : Number(novel.views).toLocaleString();
-  const likesStr = (novel.likes === '-' || !novel.likes) ? '&ndash;' : Number(novel.likes).toLocaleString();
-  const dateStr = (novel.upload_date && novel.upload_date !== LEGACY_DATE) ? novel.upload_date.split(' ')[0] : 'Legacy';
   const authorStr = (novel.author && novel.author !== 'Raw Upload') ? novel.author : 'Unknown';
   const cover = (!novel.cover || novel.cover.includes('placeholder.com') || novel.cover === 'null') ? FALLBACK_COVER : novel.cover;
-  const readTarget = novel.id ? novel.id : novel.filename;
-  
-  // Opaque download reference (id or filename). The real Telegram link is
-  // resolved server-side and never sent to the browser.
-  const dlRef = encodeURIComponent(readTarget);
 
   const totalChaps = novel.chapters > 0 ? novel.chapters : 1;
   let progressPct = 0;
@@ -838,65 +832,28 @@ function cardHTML(novel, index) {
   if (novel.upload_date && novel.upload_date !== LEGACY_DATE) {
     isNew = (Date.now() - new Date(novel.upload_date.replace(' ', 'T')).getTime()) / 86400000 <= 3;
   }
-
-  const tags = novel.tags || [];
-  const visibleTags = tags.slice(0, 5);
-  let tagsHtml = visibleTags.map((t) => `<span class="ctag" data-action="filter-tag" data-tag="${esc(t)}" role="button" tabindex="0" title="Filter by ${esc(t)}">${esc(t)}</span>`).join('');
-  if (tags.length > 5) tagsHtml += `<span class="ctag more" data-action="more-tags" data-index="${index}" role="button" tabindex="0">+${tags.length - 5} more</span>`;
-
-  const synopsis = esc(novel.synopsis || '').replace(/\n/g, '<br>');
-
   let badgesTr = '';
   if (novel.complete === 1) badgesTr += '<span class="badge complete">Complete</span>';
   if (isNew) badgesTr += '<span class="badge new">New</span>';
 
-  const canEdit = (!novel.has_meta || novel.is_custom);
-  const readLabel = (userStatus === 'reading' && userProgress > 0)
-    ? `&#9654; Continue &middot; ch. ${userProgress + 1}` : '&#128214; Read online';
-  const readClass = (userStatus === 'reading' && userProgress > 0) ? 'btn-read continue' : 'btn-read';
-
   const coverAttr = showCovers
     ? `src="${esc(cover)}"`
     : `data-src="${esc(cover)}" src="${BLANK_GIF}"`;
+  const pill = userStatus !== 'none'
+    ? `<span class="status-pill ${esc(userStatus)}">${STATUS_NAMES[userStatus] || ''}</span>` : '';
 
   return `
-  <article class="card" data-key="${esc(key)}">
+  <article class="card" data-key="${esc(key)}" role="button" tabindex="0" aria-label="${esc(novel.title_en)} - open details">
     <div class="cover-wrap">
       <img ${coverAttr} class="cover lazy-cover" loading="lazy" alt="">
       ${novel.age === 19 ? '<span class="badge badge-19">19</span>' : ''}
       <div class="badges-tr">${badgesTr}</div>
+      ${pill}
       <div class="progress-rail"><div class="progress-fill" style="width:${progressPct}%;"></div></div>
-      <select class="status-select ${esc(userStatus)}" data-action="status" data-key="${esc(key)}" aria-label="Reading status">
-        <option value="none" hidden ${userStatus === 'none' ? 'selected' : ''}>+ Add to list</option>
-        <option value="none">None</option>
-        <option value="want_to_read" ${userStatus === 'want_to_read' ? 'selected' : ''}>Want to read</option>
-        <option value="reading" ${userStatus === 'reading' ? 'selected' : ''}>Reading</option>
-        <option value="finished" ${userStatus === 'finished' ? 'selected' : ''}>Finished</option>
-      </select>
-      <button class="collect-btn ${collCount ? 'has' : ''}" data-action="collections" data-key="${esc(key)}" title="Add to collection" aria-label="Add to collection">📁<span class="collect-count">${collCount || ''}</span></button>
     </div>
     <div class="card-body">
       <h3 class="title-en">${esc(novel.title_en)}</h3>
-      ${novel.title_kr ? `<p class="title-kr">${esc(novel.title_kr)}</p>` : ''}
-      <p class="byline">by <b>${esc(authorStr)}</b></p>
-      <div class="tag-row">${tagsHtml}</div>
-      <div class="stat-row">
-        <span title="Metadata ID">&#128278; ${esc(novel.id || 'N/A')}</span>
-        <span title="Views">&#128065;&#65039; ${viewsStr}</span>
-        <span title="Likes">&#10084;&#65039; ${likesStr}</span>
-        <span title="Chapters">&#128196; ${esc(novel.chapters)} ch.</span>
-        <span title="Translated on">&#128197; ${esc(dateStr)}</span>
-      </div>
-      <div class="synopsis" id="syn-${index}">${synopsis || '<i style="color:var(--text-3)">No synopsis available.</i>'}</div>
-      ${synopsis.length > 220 ? `<button class="syn-toggle" data-action="toggle-synopsis" data-target="syn-${index}">Show more</button>` : ''}
-      <div class="card-actions">
-        ${novel.has_local_read ? `<a href="/read/${dlRef}" target="_blank" rel="noopener" class="btn-block ${readClass}">${readLabel}</a>` : ''}
-        <div class="action-row">
-          ${canEdit ? `<button class="btn-block btn-sub" data-action="edit" data-key="${esc(key)}" style="flex: 0 0 auto;">Edit</button>` : ''}
-          ${novel.has_download ? `<a href="/download/${dlRef}" class="btn-block btn-dl" data-action="download">⬇️ Download EPUB</a>` : ''}
-        </div>
-        ${novel.has_raw ? `<a href="/download/${dlRef}?type=raw" class="btn-block btn-sub" data-action="download">Download raw</a>` : ''}
-      </div>
+      <p class="card-author">${esc(authorStr)}</p>
     </div>
   </article>`;
 }
@@ -1109,15 +1066,6 @@ async function toggleAssign(novelId, collId, add, checkboxEl) {
 }
 
 function syncCardCollections(key) {
-  document.querySelectorAll('#novelGrid .card').forEach((card) => {
-    if (card.dataset.key !== key) return;
-    const btn = card.querySelector('.collect-btn');
-    if (!btn) return;
-    const count = ((globalUserData[key] || {}).collections || []).length;
-    btn.classList.toggle('has', count > 0);
-    const cspan = btn.querySelector('.collect-count');
-    if (cspan) cspan.textContent = count ? count : '';
-  });
   const dbtn = document.querySelector(`#detailContent button[data-action="collections"][data-key="${CSS.escape(key)}"]`);
   if (dbtn) {
     const count = ((globalUserData[key] || {}).collections || []).length;
@@ -1197,31 +1145,6 @@ function setMyList(val, refetch = true) {
   if (refetch) resetAndFetch();
 }
 
-/* ===================== Reading status ===================== */
-async function updateStatus(targetId, status, selectEl) {
-  try {
-    const data = await api('/api/user_status', { id: String(targetId), status });
-    globalUserData = data.user_data;
-    toast(status === 'none' ? 'Removed from your list' : 'Status updated', 'success');
-    if (state.readingStatus !== 'all') { resetAndFetch(); return; }
-    selectEl.className = `status-select ${status}`;
-    const card = selectEl.closest('.card');
-    const novel = rawNovelsData.find((n) => novelKey(n) === String(targetId));
-    if (card && novel) {
-      const user = globalUserData[String(targetId)] || {};
-      const totalChaps = novel.chapters > 0 ? novel.chapters : 1;
-      let pct = 0;
-      if (user.status === 'finished') pct = 100;
-      else if (user.status === 'reading' && (user.progress || 0) > 0) pct = Math.min(100, Math.round((user.progress / totalChaps) * 100));
-      const fill = card.querySelector('.progress-fill');
-      if (fill) fill.style.width = pct + '%';
-    }
-  } catch (err) {
-    toast(`Could not update status: ${err.message}`, 'error');
-    fetchPageData();
-  }
-}
-
 /* ===================== Random pick ===================== */
 async function pickRandomNovel() {
   const searchEl = $('searchInput');
@@ -1262,6 +1185,78 @@ function toggleCovers() {
       img.dataset.src = img.src;
       img.src = BLANK_GIF;
     }
+  });
+}
+
+/* ===================== Home shelves ===================== */
+let shelvesLoaded = false;
+let shelvesStale = false;
+
+function isDefaultView() {
+  return state.page === 1
+    && !$('searchInput').value.trim()
+    && !state.includes.size && !state.excludes.size
+    && state.readingStatus === 'all'
+    && state.collection === 'all'
+    && $('filterAudience').value === 'all'
+    && $('filterStatus').value === 'all'
+    && !$('filterAuthor').value.trim()
+    && !$('minChapters').value && !$('maxChapters').value;
+}
+
+function shelfCoverOf(n) {
+  return (!n.cover || n.cover.includes('placeholder.com') || n.cover === 'null') ? FALLBACK_COVER : n.cover;
+}
+
+function renderContinueRail(res) {
+  const rail = $('continueRail');
+  const novels = (res && res.novels) || [];
+  const ud = (res && res.userData) || {};
+  if (!novels.length) { $('shelfContinue').style.display = 'none'; rail.innerHTML = ''; return; }
+  rail.innerHTML = novels.map((n) => {
+    const key = novelKey(n);
+    const prog = (ud[key] || {}).progress || 0;
+    const total = n.chapters > 0 ? n.chapters : 0;
+    const pct = total ? Math.min(100, Math.round((prog / total) * 100)) : 0;
+    const inner = `<img src="${esc(shelfCoverOf(n))}" loading="lazy" alt="">
+        <div class="sim-title">${esc(n.title_en)}</div>
+        <div class="sim-sub">ch. ${prog + 1}${total ? ` &middot; ${pct}%` : ''}</div>
+        <div class="sim-prog"><i style="width:${pct}%"></i></div>`;
+    return n.has_local_read
+      ? `<a class="sim-card" href="/read/${encodeURIComponent(key)}" target="_blank" rel="noopener" title="Resume reading">${inner}</a>`
+      : `<div class="sim-card" data-action="open-novel" data-key="${esc(key)}" role="button" tabindex="0">${inner}</div>`;
+  }).join('');
+  $('shelfContinue').style.display = '';
+}
+
+function renderRecsRail(res) {
+  const rail = $('recsRail');
+  const novels = (res && res.novels) || [];
+  if (!novels.length) { $('shelfRecs').style.display = 'none'; rail.innerHTML = ''; return; }
+  $('recsHead').textContent = res.basis === 'tags' ? 'Recommended for you' : 'Popular in the library';
+  rail.innerHTML = novels.map((n) => {
+    const key = novelKey(n);
+    const a = (n.author && n.author !== 'Raw Upload') ? n.author : 'Unknown';
+    return `<div class="sim-card" data-action="open-novel" data-key="${esc(key)}" role="button" tabindex="0">
+        <img src="${esc(shelfCoverOf(n))}" loading="lazy" alt="">
+        <div class="sim-title">${esc(n.title_en)}</div>
+        <div class="sim-sub">${esc(a)}</div>
+      </div>`;
+  }).join('');
+  $('shelfRecs').style.display = '';
+}
+
+async function loadShelves() {
+  shelvesLoaded = true;
+  shelvesStale = false;
+  const [cont, recs] = await Promise.all([
+    api('/api/library', { page: 1, limit: 12, readingStatus: 'reading' }).catch(() => null),
+    api('/api/recommendations?limit=12').catch(() => null),
+  ]);
+  renderContinueRail(cont);
+  renderRecsRail(recs);
+  $('shelves').querySelectorAll('img').forEach((img) => {
+    img.addEventListener('error', () => { if (img.src !== FALLBACK_COVER) img.src = FALLBACK_COVER; }, { once: true });
   });
 }
 
@@ -1411,8 +1406,29 @@ function detailHTML(novel, similar) {
 }
 
 function syncGridStatus(key, status) {
-  const sel = document.querySelector(`#novelGrid select[data-action="status"][data-key="${CSS.escape(key)}"]`);
-  if (sel) { sel.value = status; sel.className = `status-select ${status}`; }
+  const card = document.querySelector(`#novelGrid .card[data-key="${CSS.escape(key)}"]`);
+  if (!card) return;
+  let pill = card.querySelector('.status-pill');
+  if (status === 'none') {
+    if (pill) pill.remove();
+  } else {
+    if (!pill) {
+      pill = document.createElement('span');
+      card.querySelector('.cover-wrap').appendChild(pill);
+    }
+    pill.className = `status-pill ${status}`;
+    pill.textContent = STATUS_NAMES[status] || '';
+  }
+  const novel = rawNovelsData.find((n) => novelKey(n) === key);
+  const fill = card.querySelector('.progress-fill');
+  if (novel && fill) {
+    const user = globalUserData[key] || {};
+    const total = novel.chapters > 0 ? novel.chapters : 1;
+    let pct = 0;
+    if (status === 'finished') pct = 100;
+    else if (status === 'reading' && (user.progress || 0) > 0) pct = Math.min(100, Math.round((user.progress / total) * 100));
+    fill.style.width = pct + '%';
+  }
 }
 
 async function updateDetailStatus(key, status, sel) {
@@ -1422,6 +1438,7 @@ async function updateDetailStatus(key, status, sel) {
     sel.className = `select detail-status ${status}`;
     toast(status === 'none' ? 'Removed from your list' : 'Status updated', 'success');
     syncGridStatus(key, status);
+    shelvesStale = true;
     if (state.readingStatus !== 'all') resetAndFetch();
   } catch (err) {
     toast(`Could not update status: ${err.message}`, 'error');
@@ -1570,44 +1587,25 @@ function init() {
     toggleAssign($('assignNovelId').value, cb.dataset.collId, cb.checked, cb);
   });
 
-  $('novelGrid').addEventListener('change', (e) => {
-    const sel = e.target.closest('select[data-action="status"]');
-    if (sel) updateStatus(sel.dataset.key, sel.value, sel);
-  });
   $('novelGrid').addEventListener('click', (e) => {
-    const actionEl = e.target.closest('[data-action]');
-    if (!actionEl) {
-      if (e.target.closest('a, button, select, input, textarea')) return;
-      const card = e.target.closest('.card');
-      if (card && card.dataset.key) requestNovelDetail(card.dataset.key);
-      return;
+    if (e.target.closest('a, button, select, input, textarea')) return;
+    const card = e.target.closest('.card');
+    if (card && card.dataset.key) requestNovelDetail(card.dataset.key);
+  });
+  $('novelGrid').addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('card')) {
+      e.preventDefault();
+      requestNovelDetail(e.target.dataset.key);
     }
-    const action = actionEl.dataset.action;
-    if (action === 'edit') { openEditModal(actionEl.dataset.key); }
-    else if (action === 'download') { markDownloading(actionEl); }
-    else if (action === 'toggle-synopsis') {
-      const syn = $(actionEl.dataset.target);
-      const expanded = syn.classList.toggle('expanded');
-      actionEl.textContent = expanded ? 'Show less' : 'Show more';
-    } else if (action === 'collections') {
-      openAssignModal(actionEl.dataset.key);
-    } else if (action === 'filter-tag') {
-      const tag = actionEl.dataset.tag;
-      if (!tag) return;
-      if (!state.includes.has(tag)) {
-        state.includes.add(tag);
-        if (state.excludes.has(tag)) state.excludes.delete(tag);
-        syncTagCloud();
-        resetAndFetch();
-        toast(`Filtered by tag: ${tag}`, 'success');
-      } else {
-        toast(`Already filtering by: ${tag}`);
-      }
-    } else if (action === 'more-tags') {
-      const novel = rawNovelsData[Number(actionEl.dataset.index)];
-      if (!novel) return;
-      const row = actionEl.parentElement;
-      row.innerHTML = (novel.tags || []).map((t) => `<span class="ctag" data-action="filter-tag" data-tag="${esc(t)}" role="button" tabindex="0" title="Filter by ${esc(t)}">${esc(t)}</span>`).join('');
+  });
+  $('shelves').addEventListener('click', (e) => {
+    const el = e.target.closest('[data-action="open-novel"]');
+    if (el) requestNovelDetail(el.dataset.key);
+  });
+  $('shelves').addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[data-action="open-novel"]')) {
+      e.preventDefault();
+      requestNovelDetail(e.target.dataset.key);
     }
   });
 
