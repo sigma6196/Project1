@@ -1288,7 +1288,7 @@ function clearDetailHash() {
 
 function closeDetail() {
   detailToken++;
-  $('detailModal').classList.remove('open');
+  closeModal('detailModal');
   clearDetailHash();
 }
 
@@ -1460,8 +1460,29 @@ async function updateDetailStatus(key, status, sel) {
 }
 
 /* ===================== Modals ===================== */
-function openModal(id) { $(id).classList.add('open'); }
-function closeModal(id) { $(id).classList.remove('open'); }
+let lastModalTrigger = null;
+
+function openModal(id) {
+  const modal = $(id);
+  if (!modal.classList.contains('open')) lastModalTrigger = document.activeElement;
+  modal.classList.add('open');
+  const target = modal.querySelector('.modal-close, .detail-close, button');
+  if (target) target.focus();
+}
+
+function closeModal(id) {
+  const modal = $(id);
+  if (!modal.classList.contains('open')) return;
+  modal.classList.remove('open');
+  const remaining = document.querySelector('.modal-overlay.open');
+  if (remaining) {
+    const target = remaining.querySelector('.modal-close, .detail-close, button');
+    if (target) target.focus();
+  } else if (lastModalTrigger) {
+    if (document.body.contains(lastModalTrigger)) lastModalTrigger.focus();
+    lastModalTrigger = null;
+  }
+}
 
 function openEditModal(key) {
   const novel = rawNovelsData.find((n) => novelKey(n) === key)
@@ -1664,16 +1685,28 @@ function init() {
     b.addEventListener('click', () => closeModal(b.dataset.close));
   });
   document.querySelectorAll('.modal-overlay').forEach((ov) => {
-    ov.addEventListener('click', (e) => { if (e.target === ov) ov.classList.remove('open'); });
+    ov.addEventListener('click', (e) => { if (e.target === ov) closeModal(ov.id); });
   });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      document.querySelectorAll('.modal-overlay.open').forEach((m) => m.classList.remove('open'));
+      document.querySelectorAll('.modal-overlay.open').forEach((m) => closeModal(m.id));
       clearDetailHash();
       setFilterPanel(false);
     } else if (e.key === '/' && !/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) {
       e.preventDefault();
       $('searchInput').focus();
+    } else if (e.key === 'Tab') {
+      // Keep Tab focus inside the topmost open modal
+      const overlays = document.querySelectorAll('.modal-overlay.open');
+      if (!overlays.length) return;
+      const overlay = overlays[overlays.length - 1];
+      const focusables = [...overlay.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')]
+        .filter((el) => !el.disabled && el.offsetParent !== null);
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && (document.activeElement === last || !overlay.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
     }
   });
 
@@ -1713,7 +1746,7 @@ function init() {
   window.addEventListener('hashchange', () => {
     const m = location.hash.match(/^#novel=(.+)$/);
     if (m) openNovelDetail(decodeURIComponent(m[1]));
-    else { detailToken++; $('detailModal').classList.remove('open'); }
+    else { detailToken++; closeModal('detailModal'); }
   });
 
   fetchPageData();
